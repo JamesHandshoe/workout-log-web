@@ -1,6 +1,8 @@
 $(document).ready(function(){
 	var WorkoutLog = (function($, undefined){
-		var API_BASE = '//workoutapi-1150-jhandshoe.herokuapp.com/api/';
+		var API_BASE = location.hostname === "localhost" ?
+			"//localhost:3000/api/" :
+			"//workoutapi-1150-jhandshoe.herokuapp.com/";
 
 		var setAuthHeader = function(sessionToken){
 
@@ -10,6 +12,13 @@ $(document).ready(function(){
 				"headers": {
 					"Authorization": sessionToken
 				}
+			});
+
+			$.ajax({
+				type: "GET",
+				url: API_BASE + "login"
+			}).then(function(data){
+				WorkoutLog.username = data;
 			});
 		};
 
@@ -39,6 +48,10 @@ $(document).ready(function(){
 		if (target === '#history') {
 			WorkoutLog.log.setHistory();
 		}
+
+		if (target === "#feed") {
+			WorkoutLog.setFeed();
+		}
 	});
 
 
@@ -49,6 +62,16 @@ $(document).ready(function(){
 	}
 
 	window.WorkoutLog = WorkoutLog;
+
+	WorkoutLog.socket = io.connect("http://localhost:3000");
+
+	WorkoutLog.socket.on("new log", function(data){
+		WorkoutLog.addFeedItem(data);
+	});
+
+	WorkoutLog.socket.on("chat-message", function(data){
+		WorkoutLog.addFeedItem(data);
+	});
 });
 /*test api - put this back in to check if apis are working
 	$('#testAPI').on('click', function(){
